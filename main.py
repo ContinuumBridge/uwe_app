@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# example1.py
+# main.py
 """
 Copyright (c) 2014 ContinuumBridge Limited
 
@@ -21,8 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-ModuleName = "example1" 
-SET_TEMP = 22.5
+ModuleName = "uwe_app" 
 
 import sys
 import os.path
@@ -32,6 +31,9 @@ from peewee import FloatField
 from cbcommslib import CbApp, DataStore, DataModel
 from cbconfig import *
 
+class TemperatureData(DataModel):
+    temperature = FloatField()
+
 class UWEApp(CbApp):
 
     def __init__(self, argv):
@@ -39,7 +41,6 @@ class UWEApp(CbApp):
         self.store = DataStore()
         self.store.register(TemperatureData)
 
-        '''
         logging.basicConfig(filename=CB_LOGFILE,level=CB_LOGGING_LEVEL,format='%(asctime)s %(message)s')
         self.appClass = "control"
         self.state = "stopped"
@@ -81,41 +82,20 @@ class UWEApp(CbApp):
                 self.sendMessage(req, message["id"])
                 logging.debug("%s onadaptorFunctions, req: %s", ModuleName, req)
             elif p["parameter"] == "switch":
-                self.switchID = message["id"]
-                self.gotSwitch = True
-                logging.debug("%s switchID: %s", ModuleName, self.switchID)
+                logging.debug("%s onAdaptorFunctions unexpected device %s", ModuleName, str(message))
         self.setState("running")
 
     def onAdaptorData(self, message):
         if message["id"] == self.sensorID:
-            if self.gotSwitch:
-                command = {"id": self.id,
-                           "request": "command"}
-                if message["content"] == "temperature":
-                    logging.debug("%s %s Temperature = %s", ModuleName, self.id, message["data"])
-                    if message["data"] > SET_TEMP + 0.2:
-                        command["data"] = "off"
-                        logging.debug("%s %s Switching off", ModuleName, self.id)
-                        self.sendMessage(command, self.switchID)
-                    elif message["data"] < SET_TEMP - 0.2:
-                        command["data"] = "on"
-                        logging.debug("%s %s Switching on", ModuleName, self.id)
-                        self.sendMessage(command, self.switchID)
+            if message["content"] == "temperature":
+                logging.debug("%s %s Temperature = %s", ModuleName, self.id, message["data"])
             else:
                 logging.debug("%s Trying to process temperature before switch connected", ModuleName)
         elif message["id"] == self.switchID:
-            self.switchState = message["body"]
+            logging.debug("%s onAdaptorData unexpected device %s", ModuleName, message)
 
     def onConfigureMessage(self, config):
         self.setState("starting")
-    '''
-
-
-
-class TemperatureData(DataModel):
-
-    temperature = FloatField()
-
 
 if __name__ == '__main__':
     app = UWEApp(sys.argv)
