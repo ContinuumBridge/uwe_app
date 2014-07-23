@@ -21,7 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-ModuleName = "uwe_app" 
+ModuleName         = "uwe_app" 
+START_DELAY        = 20          # Delay before start of sending dummy data
+DATA_SEND_INTERVAL = 20          # How often to send dummy data
 
 import sys
 import os.path
@@ -30,6 +32,7 @@ import logging
 from peewee import FloatField
 from cbcommslib import CbApp, DataStore, DataModel
 from cbconfig import *
+from twisted.internet import reactor
 
 class TemperatureData(DataModel):
     temperature = FloatField()
@@ -44,22 +47,18 @@ class UWEApp(CbApp):
         logging.basicConfig(filename=CB_LOGFILE,level=CB_LOGGING_LEVEL,format='%(asctime)s %(message)s')
         self.appClass = "control"
         self.state = "stopped"
-        self.gotSwitch = False
         self.sensorID = ""
         self.switchID = ""
-        # Temporary botch - set temperature from a file
-        try:
-            tempFile = CB_CONFIG_DIR + 'set-temp'
-            with open(tempFile, 'r') as f:
-                s = f.read()
-            if s.endswith('\n'):
-                s = s[:-1]
-            SET_TEMP = s
-            logging.debug("%s Set temperature: %s", ModuleName, SET_TEMP)
-        except:
-            logging.debug("%s Could not read set-temp file", ModuleName)
         #CbApp.__init__ MUST be called
         CbApp.__init__(self, argv)
+
+    # Should put in library
+    def isotime(self):
+        t = time.time()
+        gmtime = time.gmtime(t)
+        milliseconds = '%03d' % int((t - int(t)) * 1000)
+        now = time.strftime('%Y-%m-%dT%H:%M:%S.', gmtime) + milliseconds +"Z"
+        return now
 
     def setState(self, action):
         self.state = action
@@ -94,8 +93,25 @@ class UWEApp(CbApp):
         elif message["id"] == self.switchID:
             logging.debug("%s onAdaptorData unexpected device %s", ModuleName, message)
 
+    def sendAppData(self):
+        msg = {
+               "source": self.id,
+               "destination": "CID1",
+               "time_sent": self.isotime(),
+               "body": {
+                        "verb": "post",
+                        "data": "dummy",
+                        "time": time.time()
+                       }
+              }    
+        logging.debug("%s onAppData sending message: %s", ModuleName, msg)
+        self.sendMessage(msg, "conc")
+        reactor.callLater(DATA_SEND_INTERVAL, self.sendAppData)
+
     def onConfigureMessage(self, config):
         self.setState("starting")
+        # This is just a botch so that the app will send data without any other interaction
+        reactor.callLater(START_DELAY, self.sendAppData)
 
 if __name__ == '__main__':
     app = UWEApp(sys.argv)
