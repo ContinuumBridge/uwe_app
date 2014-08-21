@@ -67,21 +67,21 @@ class UWEApp(CbApp):
                "state": self.state}
         self.sendManagerMessage(msg)
 
-    def onAdaptorFunctions(self, message):
-        for p in message["functions"]:
-            if p["parameter"] == "temperature":
+    def onAdaptorService(self, message):
+        for p in message["service"]:
+            if p["characteristic"] == "temperature":
                 self.sensorID = message["id"]
                 req = {"id": self.id,
-                      "request": "functions",
-                      "functions": [
-                                    {"parameter": "temperature",
-                                    "interval": 30.0}
-                                   ]
+                       "request": "service",
+                       "service": [
+                                    {"characteristic": "temperature",
+                                     "interval": 30.0}
+                                  ]
                       }
                 self.sendMessage(req, message["id"])
-                logging.debug("%s onadaptorFunctions, req: %s", ModuleName, req)
-            elif p["parameter"] == "switch":
-                logging.debug("%s onAdaptorFunctions unexpected device %s", ModuleName, str(message))
+                logging.debug("%s onadaptorService, req: %s", ModuleName, req)
+            elif p["characteristic"] == "switch":
+                logging.debug("%s onAdaptorService unexpected device %s", ModuleName, str(message))
         self.setState("running")
 
     def onAdaptorData(self, message):
@@ -114,4 +114,4 @@ class UWEApp(CbApp):
         reactor.callLater(START_DELAY, self.sendAppData)
 
 if __name__ == '__main__':
-    app = UWEApp(sys.argv)
+    UWEApp(sys.argv)
