@@ -17,16 +17,16 @@ from twisted.internet import reactor
 
 # Default values:
 config = {
-    'temperature': 'True',
+    'temperature': 'False',
     'temp_min_change': 0.2,
     'irtemperature': 'False',
     'irtemp_min_change': 0.5,
-    'humidity': 'True',
+    'humidity': 'False',
     'humidity_min_change': 0.2,
     'buttons': 'False',
-    'accel': 'False',
+    'accel': 'True',
     'accel_min_change': 0.02,
-    'accel_polling_interval': 3.0,
+    'accel_polling_interval': 1.0,
     'gyro': 'False',
     'gyro_min_change': 0.5,
     "gyro_polling_interval": 3.0,
@@ -34,15 +34,15 @@ config = {
     'magnet_min_change': 1.5,
     'magnet_polling_interval': 3.0,
     'binary': 'True',
-    'luminance': 'True',
+    'luminance': 'False',
     'luminance_min_change': 1.0,
-    'power': 'True',
+    'power': 'False',
     'power_min_change': 1.0,
-    'battery': 'True',
+    'battery': 'False',
     'battery_min_change': 1.0,
     'connected': 'True',
     'slow_polling_interval': 600.0,
-    'send_delay': 3.0,
+    'send_delay': 1.0,
     'geras_key': 'ea2f0e06ff8123b7f46f77a3a451731a'
 }
 
@@ -54,7 +54,7 @@ class DataManager:
         self.waiting=[]
 
     def sendValuesThread(self, values, deviceID):
-        url = self.baseurl + deviceID
+        url = self.baseurl + "U_" + deviceID
         status = 0
         logging.debug("%s sendValues, device: %s length: %s", ModuleName, deviceID, str(len(values)))
         headers = {'Content-Type': 'application/json'}
@@ -367,7 +367,7 @@ class App(CbApp):
         self.appClass = "monitor"
         self.state = "stopped"
         self.status = "ok"
-        configFile = CB_CONFIG_DIR + "eew_app.config"
+        configFile = CB_CONFIG_DIR + "uwe_app.config"
         global config
         try:
             with open(configFile, 'r') as configFile:
