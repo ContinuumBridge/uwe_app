@@ -1,0 +1,9 @@
+{
+    "exe": "uwe_app.py", 
+    "name": "UWE App", 
+    "url": "https://github.com/ContinuumBridge/uwe_app/archive/v1.0.0.tar.gz", 
+    "app_resource": "/api/bridge/v1/app/15/", 
+    "version": "1.0.0", 
+    "provider": "ContinuumBridge", 
+    "description": "UWE App"
+}
